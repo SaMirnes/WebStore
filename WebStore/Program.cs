@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Globalization;
 using System.IO;
 
 namespace WebStoreProject
@@ -11,8 +12,11 @@ namespace WebStoreProject
         static string[] userInput;
         static WebStore store = new WebStore();
         static Product? product;
-        static string cartFilePath = @"..\..\..\ProductsCart.txt";
-        static string storeFilePath = @"..\..\..\ProductsStore.txt";
+        static string cartFilePath = @"..\..\..\Data\ProductsCart.txt";
+        static string storeFilePath = @"..\..\..\Data\ProductsStore.txt";
+
+
+
         static void Main(string[] args)
         {
             LoadProducts(storeFilePath, store.Products);
@@ -24,7 +28,7 @@ namespace WebStoreProject
 
                 if (userInputString is not null)
                 {
-                    userInput = userInputString.ToUpper().Split(" ");
+                    userInput = Words(userInputString.ToUpper());
 
                     switch (userInput[0])
                     {
@@ -32,8 +36,6 @@ namespace WebStoreProject
                         case "INFO":
                             Console.WriteLine("Commands are: HELP/INFO, STORE, CART, SELECT, ADD, REMOVE, CREATE, DELETE, EDIT");
                             break;
-
-
 
 
 
@@ -49,8 +51,6 @@ namespace WebStoreProject
 
 
 
-
-
                         case "SELECT": // Doesn't really do anything noteworthy. Maybe add descriptions to products that can be viewed here? And reviews?
                             Console.WriteLine();
 
@@ -61,8 +61,6 @@ namespace WebStoreProject
 
 
 
-
-
                         case "ADD": // add producName (int amount opt.) 
                             Console.WriteLine();
 
@@ -70,7 +68,7 @@ namespace WebStoreProject
                             product = store.FindProduct(userInput[1]);
                             if (product is not null)
                             {
-                                if(userInput.Length > 2)
+                                if (userInput.Length > 2)
                                 {
                                     int parseAttempt = 0;
                                     if (int.TryParse(userInput[2], out parseAttempt))
@@ -89,8 +87,6 @@ namespace WebStoreProject
 
 
 
-
-
                         case "REMOVE": // Need to add argument so that you can control how many you remove
                             Console.WriteLine();
 
@@ -103,8 +99,6 @@ namespace WebStoreProject
                             }
                             else Console.WriteLine("Product is not in your shopping cart.");
                             break;
-
-
 
 
 
@@ -122,8 +116,6 @@ namespace WebStoreProject
 
 
 
-
-
                         case "DELETE":
                             product = store.FindProduct(userInput[1]);
                             if (product is not null)
@@ -137,12 +129,8 @@ namespace WebStoreProject
 
 
 
-
-
                         case "EDIT": // Maybe this should just be called edit, and let you edit the fields of product-objects?
                             break;
-
-
 
 
 
@@ -159,13 +147,9 @@ namespace WebStoreProject
 
 
 
-
-
                         case "":
                             Console.WriteLine();
                             break;
-
-
 
 
 
@@ -186,7 +170,7 @@ namespace WebStoreProject
             {
                 foreach (Product p in products)
                 {
-                    writer.WriteLine($"{p.Name};{p.Price};{p.Amount};{p.Category}"  + "~");
+                    writer.WriteLine($"{p.Name};{p.Price};{p.Amount};{p.Category}" + "~");
                 }
             }
         }
@@ -196,18 +180,18 @@ namespace WebStoreProject
             using (StreamReader reader = new StreamReader(path))
             {
                 string? fileString = reader.ReadToEnd();
-                string[] textFileString = fileString.Split("\n"); // Decide split char
+                string[] textFileString = fileString.Split("~"); // Decide split char
                 string[] productInfo;
 
                 if (textFileString[0] != "")
                 {
                     foreach (string productString in textFileString)
                     {
-                        productInfo = productString.Split("~"); // Decide split char
+                        productInfo = productString.Split(";"); // Decide split char
                         products.Add(new Product(productInfo[0], Decimal.Parse(productInfo[1]), int.Parse(productInfo[2]),
                             (Enums.Categories)Enum.Parse(typeof(Enums.Categories), productInfo[3], true)));
 
-                    } 
+                    }
                 }
             }
         }
@@ -259,6 +243,98 @@ namespace WebStoreProject
                 newArray[i] = array[i + 1];
             }
             return newArray;
+        }
+
+        /// <summary>
+        /// Returns array of contents of paramater string split by space " " but kept by ()
+        /// </summary>
+        /// <param name="text"></param>
+        public static string[] Words(string text)
+        {
+            List<string> sequences = new List<string>();
+            string startingSplitChars = " ('\"";
+            string endCharSplit = " )'\"";
+            char startChar = ' ';
+            char endChar = ' ';
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                switch (text[i])
+                {
+                    case '(':
+                        startChar = '(';
+                        endChar = ')';
+                        break;
+
+                    case '"':
+                        startChar = '"';
+                        endChar = '"';
+                        break;
+
+                    case '\'':
+                        startChar = '\'';
+                        endChar = '\'';
+                        break;
+
+                    case ' ':
+                        if (startingSplitChars.Contains(text[i + 1]))
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            startChar = ' ';
+                            endChar = ' ';
+                            break;
+                        }
+
+                    default:
+                        break;
+                }
+
+                if (text[i] == startChar || i is 0)
+                {
+                    int indexStart = i;
+                    int indexEnd = 0;
+
+                    for (int j = i + 1; j < text.Length; j++) // Search for ending split-char
+                    {
+                        if (text[j] == endChar)
+                        {
+                            indexEnd = j;
+                            i = j - 1; // Don't need to search for next start split-char until after this word
+                            break;
+                        }
+                        else if (j == text.Length - 1)
+                        {
+                            indexEnd = j;
+                        }
+                    }
+                    if (indexEnd is not 0)
+                    {
+                        if (indexEnd != (text.Length - 1))
+                        {
+                            sequences.Add(text.Substring(indexStart + 1, indexEnd - indexStart - 1));
+                        }
+                        else
+                        {
+                            if (indexStart is 0) // if first and last word
+                            {
+                                sequences.Add(text.Substring(indexStart, indexEnd - indexStart));
+                            }
+                            else if(endCharSplit.Contains(text[indexEnd])) // if last but not first word
+                            {
+                                sequences.Add(text.Substring(indexStart + 1, indexEnd - indexStart - 1));
+                            }
+                            else
+                            {
+                                sequences.Add(text.Substring(indexStart + 1, indexEnd - indexStart));
+                            }
+                        }
+                    }
+                }
+            }
+            return sequences.ToArray();
         }
     }
 }
