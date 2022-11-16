@@ -12,8 +12,8 @@ namespace WebStoreProject
         static string[] userInput;
         static WebStore store = new WebStore();
         static Product? product;
-        static string cartFilePath = @"..\..\..\Data\ProductsCart.txt";
-        static string storeFilePath = @"..\..\..\Data\ProductsStore.txt";
+        static string cartFilePath = @"Data\ProductsCart.txt";
+        static string storeFilePath = @"Data\ProductsStore.txt";
 
 
 
@@ -314,13 +314,20 @@ namespace WebStoreProject
                     {
                         if (indexEnd != (text.Length - 1))
                         {
-                            sequences.Add(text.Substring(indexStart + 1, indexEnd - indexStart - 1));
+                            if (indexStart is 0 && startChar is ' ')
+                            {
+                                sequences.Add(text.Substring(indexStart, indexEnd));
+                            }
+                            else
+                            {
+                                sequences.Add(text.Substring(indexStart + 1, indexEnd - indexStart - 1));
+                            }
                         }
                         else
                         {
                             if (indexStart is 0) // if first and last word
                             {
-                                sequences.Add(text.Substring(indexStart, indexEnd - indexStart));
+                                sequences.Add(text.Substring(indexStart, indexEnd + 1));
                             }
                             else if(endCharSplit.Contains(text[indexEnd])) // if last but not first word
                             {
