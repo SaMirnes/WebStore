@@ -1,1 +1,0 @@
-MOUSE;599,90;200;Computer

@@ -40,7 +40,8 @@ namespace WebStoreProject
 
 
                         case "STORE":
-                            Console.WriteLine("\n\n" + "Product" + "\t\t\t\t" + "Price" + "\t\t\t" + "Amount" + "\t\t\t" + "Category");
+                            Console.WriteLine();
+                            Console.WriteLine("Product" + "\t\t\t\t" + "Price" + "\t\t\t" + "Amount" + "\t\t\t" + "Category");
 
                             foreach (Product p in store.Products)
                             {
@@ -65,24 +66,29 @@ namespace WebStoreProject
                             Console.WriteLine();
 
                             int amount = 1;
-                            product = store.FindProduct(userInput[1]);
-                            if (product is not null)
+                            if (userInput.Length > 1)
                             {
-                                if (userInput.Length > 2)
+
+                                product = store.FindProduct(userInput[1]);
+                                if (product is not null)
                                 {
-                                    int parseAttempt = 0;
-                                    if (int.TryParse(userInput[2], out parseAttempt))
+                                    if (userInput.Length > 2)
                                     {
-                                        amount = parseAttempt;
+                                        int parseAttempt = 0;
+                                        if (int.TryParse(userInput[2], out parseAttempt))
+                                        {
+                                            amount = parseAttempt;
+                                        }
                                     }
+                                    Product productInCart = store.Cart.FindProduct(userInput[1]);
+                                    if (productInCart is not null) productInCart.Amount += amount;
+                                    else store.Cart.AddProduct(new Product(product.Name, product.Price, amount, product.Category));
+                                    Console.WriteLine(product.Name + " is added to your shopping cart.");
+                                    SaveProducts(cartFilePath, store.Cart.ProductsInCart);
                                 }
-                                Product productInCart = store.Cart.FindProduct(userInput[1]);
-                                if (productInCart is not null) productInCart.Amount += amount;
-                                else store.Cart.AddProduct(new Product(product.Name, product.Price, amount, product.Category));
-                                Console.WriteLine(product.Name + " is added to your shopping cart.");
-                                SaveProducts(cartFilePath, store.Cart.ProductsInCart);
+                                else Console.WriteLine("Product does not exist in the store.");
                             }
-                            else Console.WriteLine("Product does not exist in the store.");
+                            else Console.WriteLine("Please write the name of the product after the add command.");
                             break;
 
 
@@ -148,7 +154,6 @@ namespace WebStoreProject
 
 
                         case "":
-                            Console.WriteLine();
                             break;
 
 
@@ -180,17 +185,16 @@ namespace WebStoreProject
             using (StreamReader reader = new StreamReader(path))
             {
                 string? fileString = reader.ReadToEnd();
-                string[] textFileString = fileString.Split("~"); // Decide split char
+                string[] textFileString = fileString.Split("\r\n");
                 string[] productInfo;
 
-                if (textFileString[0] != "")
+                foreach (string productString in textFileString)
                 {
-                    foreach (string productString in textFileString)
+                    if (productString is not "")
                     {
-                        productInfo = productString.Split(";"); // Decide split char
+                        productInfo = productString.Split(";");
                         products.Add(new Product(productInfo[0], Decimal.Parse(productInfo[1]), int.Parse(productInfo[2]),
                             (Enums.Categories)Enum.Parse(typeof(Enums.Categories), productInfo[3], true)));
-
                     }
                 }
             }
@@ -257,6 +261,11 @@ namespace WebStoreProject
             char startChar = ' ';
             char endChar = ' ';
 
+            if (text.Length == 0)
+            {
+                sequences.Add("");
+                return sequences.ToArray();
+            }
             for (int i = 0; i < text.Length; i++)
             {
                 switch (text[i])
@@ -329,7 +338,7 @@ namespace WebStoreProject
                             {
                                 sequences.Add(text.Substring(indexStart, indexEnd + 1));
                             }
-                            else if(endCharSplit.Contains(text[indexEnd])) // if last but not first word
+                            else if (endCharSplit.Contains(text[indexEnd])) // if last but not first word
                             {
                                 sequences.Add(text.Substring(indexStart + 1, indexEnd - indexStart - 1));
                             }

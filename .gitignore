@@ -6,6 +6,11 @@ Tester2/*
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# VS Code
+*.vscode/*
+.vscode/
+
+
 # User-specific files
 *.rsuser
 *.suo
